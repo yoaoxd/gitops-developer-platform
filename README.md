@@ -2,8 +2,6 @@
 
 An initial, deliberately small command-line scaffold for turning one service definition into Kubernetes JSON manifests. It produces a Namespace, Deployment, and Service with HTTP health probes and explicit resource requests and limits. It can also emit example Flux `GitRepository` and `Kustomization` resources.
 
-This is an unvalidated first version. It has not been run against a Kubernetes cluster or a Flux installation and should be reviewed before use.
-
 ## Quick start
 
 Requires Python 3.10 or later and uses only the Python standard library.
@@ -60,14 +58,22 @@ The CLI only renders files. Git remains the source of truth: a team reviews the 
 
 Revert the Git commit that introduced the unwanted state, then merge the revert. Flux should reconcile the repository's previous desired state on its next interval. A rollback is not guaranteed to undo external effects such as database migrations, deleted persistent data, or calls to third-party systems; those need a service-specific recovery plan.
 
-## Current limits
+## Design decisions
+
+- **Render before deployment.** A file generator keeps cluster credentials out of the tool and makes the desired state reviewable in Git. A direct deployment command would couple rendering to access and rollout policy.
+- **One service definition.** A small JSON input reduces repeated configuration without introducing a template language. Helm remains a better fit when chart packaging and dependency management are required.
+- **Flux as an optional integration.** Kubernetes resources remain usable independently. The generated Flux resources illustrate reconciliation; they do not provision a complete platform.
+
+For production use, the next decisions are schema validation, image provenance, access policies, and promotion between environments. Observability and rollback verification belong to the operating environment.
+
+## Status and limitations
 
 - The generator performs basic input checks but does not validate manifests against Kubernetes or Flux schemas.
 - It does not create ingress, autoscaling, policies, secrets, service accounts, or environment promotion workflows.
 - Flux authentication and secret management are intentionally outside this example.
 - The Flux path is a convention (`clusters/production/<service>`) and may need editing for a real repository layout.
 - Probe timing and default resources are starting points, not production recommendations.
-- There are no tests in this initial repository, and the implementation has not been locally validated.
+- Initial implementation; no local tests or Kubernetes/Flux validation have been performed.
 
 ## License
 
